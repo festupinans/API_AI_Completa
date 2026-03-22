@@ -90,6 +90,52 @@ app.post('/api/ask', async (req: Request, res: Response) => {
   }
 });
 
+// Endpoint para peticiones en Streaming (Ideal para Unity)
+app.post('/api/ask/stream', async (req: Request, res: Response) => {
+  console.log('[POST] /api/ask/stream -> Petición de streaming recibida.');
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      res.status(400).send('Message is required');
+      return;
+    }
+
+    // Cabeceras HTTP para streaming de texto plano
+    res.writeHead(200, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+      'Connection': 'keep-alive'
+    });
+
+    const completion = await openRouter.chat.send({
+      chatGenerationParams: {
+        model: 'openrouter/free',
+        stream: true,
+        messages: [{ role: 'user', content: String(message) }]
+      }
+    });
+
+    // Iterar los fragmentos asíncronamente mientras se generan
+    for await (const chunk of completion) {
+      const textChunk = chunk.choices[0]?.delta?.content || '';
+      if (textChunk) {
+        res.write(textChunk); // Enviar inmediatamente al cliente
+      }
+    }
+    
+    console.log('[POST] /api/ask/stream -> Streaming finalizado exitosamente.');
+    res.end();
+  } catch (error) {
+    console.error('Error en streaming OpenRouter:', error);
+    if (!res.headersSent) {
+      res.status(500).send('Error processing request: ' + error);
+    } else {
+      res.end('\n[Error procesando el resto del mensaje]');
+    }
+  }
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`✅ API running on http://localhost:${PORT}`);

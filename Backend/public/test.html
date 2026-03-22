@@ -111,19 +111,36 @@
             responseDiv.classList.remove('error');
 
             try {
-                const res = await fetch('/api/ask', {
+                // Cambiamos el fetch al nuevo endpoint de streaming
+                const res = await fetch('/api/ask/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message })
                 });
-                
-                const data = await res.json();
-                
-                if (res.ok && data.success) {
-                    responseDiv.textContent = data.response;
-                } else {
-                    throw new Error(data.error || 'Error desconocido');
+
+                if (!res.ok) {
+                    throw new Error('Error en la respuesta del servidor: ' + res.status);
                 }
+
+                // Limpiamos el div de respuesta antes de empezar a recibir texto
+                responseDiv.textContent = '';
+                
+                // Configurar el lector del stream
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) {
+                        break;
+                    }
+
+                    // Decodificar el bloque de texto crudo (Uint8Array) a texto
+                    const textChunk = decoder.decode(value, { stream: true });
+                    responseDiv.textContent += textChunk;
+                }
+
             } catch (err) {
                 responseDiv.textContent = '❌ Error: ' + err.message;
                 responseDiv.classList.add('error');
