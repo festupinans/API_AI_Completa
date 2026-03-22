@@ -12,8 +12,17 @@ public class IARequest
 
 public class IA_Manager : MonoBehaviour
 {
+    [SerializeField] private bool IA_local = false; // Si queremos usar la IA local (LLaMA.cpp) o la remota (OpenAI)
     // Usaremos el nuevo endpoint que acabamos de crear en Express para streaming de texto
-    private string apiUrl = "http://apiia-ia-lutnid-7381ae-157-254-174-229.traefik.me/api/ask/stream";
+    private string apiUrlLocal = "http://localhost:3000/api/ask/stream", apiUrlRemota = "http://apiia-ia-lutnid-7381ae-157-254-174-229.traefik.me/api/ask/stream";
+
+    private string apiUrl;
+
+    void Start()
+    {
+        apiUrl = IA_local ? apiUrlLocal : apiUrlRemota;
+        Debug.Log($"IA_Manager inicializado. Usando API URL: {apiUrl}");
+    }
 
     public void AskIA(string userMessage, Action<string> onUpdate, Action onComplete, Action<string> onError)
     {

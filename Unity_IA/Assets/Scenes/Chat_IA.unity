@@ -1731,6 +1731,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 933064a77ac3ddb4ca3b06c6d8a58cd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IA_Manager
+  IA_local: 1
 --- !u!4 &1887203826
 Transform:
   m_ObjectHideFlags: 0
