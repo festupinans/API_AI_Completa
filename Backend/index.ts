@@ -18,25 +18,46 @@ const openRouter = new OpenRouter({
 
 // Endpoint de prueba
 app.get('/health', (req: Request, res: Response) => {
+  console.log('[GET] /health -> Petición de salud recibida.');
   res.json({ status: 'API running correctly' });
 });
 
 // Endpoint para el frontend de pruebas
 app.get('/front_test_ia', (req: Request, res: Response) => {
-  res.sendFile(path.join(process.cwd(), 'public', 'test.html'));
+  console.log('[GET] /front_test_ia -> Intentando servir public/test.html');
+  const filePath = path.join(process.cwd(), 'public', 'test.html');
+  console.log(`[GET] /front_test_ia -> Ruta calculada: ${filePath}`);
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('[GET] /front_test_ia -> Error al enviar el archivo:', err);
+      // Pasa el error al siguiente middleware pero no rompas
+      res.status(404).json({
+        message: "Not found",
+        code: "NOT_FOUND",
+        errorInfo: err.message,
+        path: filePath
+      });
+    } else {
+      console.log('[GET] /front_test_ia -> Archivo enviado correctamente.');
+    }
+  });
 });
 
 // Endpoint principal para hacer preguntas a la IA
 app.post('/api/ask', async (req: Request, res: Response) => {
+  console.log('[POST] /api/ask -> Petición recibida.');
   try {
     const { message } = req.body;
+    console.log(`[POST] /api/ask -> Mensaje extraído: "${message}"`);
 
     if (!message) {
+      console.log('[POST] /api/ask -> Error: El mensaje está vacío.');
       res.status(400).json({ error: 'Message is required' });
       return;
     }
 
     // Llamar a OpenRouter
+    console.log('[POST] /api/ask -> Preparando para llamar a OpenRouter con el modelo openrouter/free...');
     const completion = await openRouter.chat.send({
       chatGenerationParams: {
         model: 'openrouter/free',
@@ -49,6 +70,7 @@ app.post('/api/ask', async (req: Request, res: Response) => {
       }
     });
 
+    console.log('[POST] /api/ask -> Respuesta recibida de OpenRouter.');
     const aiResponse = completion.choices[0].message.content;
     const modelUsed = (completion as any).model || 'unknown';
 
