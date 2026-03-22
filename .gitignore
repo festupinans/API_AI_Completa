@@ -17,3 +17,4 @@ Assets/Unity.VisualScripting.Generated*
 /Backend/node_modules
 Backend/.env
 Unity_IA/Build/web/server.py
+/Unity_IA/Build
